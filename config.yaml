@@ -1,0 +1,25 @@
+experiment_name: cicids2017_rf_baseline
+
+data:
+  # Provide either a single CSV path OR a glob. If both present, glob wins.
+  input_csv: data/raw/CICIDS2017.csv
+  input_glob: null
+  target_col: Label
+  drop_cols: ["Timestamp"]  # adjust if present in your CSVs
+  test_size: 0.2
+  random_state: 42
+  # Set to true if you want to downsample/upsample minority/majority classes using imblearn
+  use_class_balance: false
+
+model:
+  type: RandomForestClassifier
+  params:
+    n_estimators: 200
+    max_depth: null
+    n_jobs: -1
+    random_state: 42
+
+output:
+  model_path: models/model.pkl
+  feature_cols_path: models/feature_columns.json
+  scaler_path: models/scaler.pkl

@@ -1,0 +1,15 @@
+# Core
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.5
+joblib>=1.4
+PyYAML>=6.0
+
+# API
+Flask>=3.0
+gunicorn>=22.0
+
+# Optional utils
+imbalanced-learn>=0.12
+python-dotenv>=1.0
+matplotlib>=3.8

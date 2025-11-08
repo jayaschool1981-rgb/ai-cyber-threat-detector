@@ -1,4 +1,8 @@
-/data
+# Ignore everything in models except required files
+/models/*
+!/models/model.pkl
+!/models/scaler.pkl
+!/models/feature_columns.json
+
 /notebooks
 /__pycache__
-/models/*.pkl

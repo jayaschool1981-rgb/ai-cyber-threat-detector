@@ -8,6 +8,7 @@ PyYAML>=6.0
 # API
 Flask>=3.0
 gunicorn>=22.0
+flask-cors>=4.0
 
 # Optional utils
 imbalanced-learn>=0.12

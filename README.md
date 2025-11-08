@@ -48,4 +48,8 @@ python api/test_request.py
 - If using multiple CSVs, you can change `config.yaml: data.input_glob` to a pattern like `data/raw/*.csv`.
 - The API expects **the same features/columns used in training**. A mapping file ensures consistent order.
 
+### Live Demo
+Frontend UI: https://ai-cyber-threat-detector.netlify.app  
+API Endpoint: https://ai-cyber-threat-detector-65us.onrender.com/predict
+
 *Generated on: 2025-11-07T15:56:42*

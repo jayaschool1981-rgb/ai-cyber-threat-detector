@@ -1,9 +1,71 @@
-# Ignore everything in models except required files
-/models/*
-!/models/model.pkl
-!/models/scaler.pkl
-!/models/feature_columns.json
+# ==============================
+# 🔥 Python Virtual Environment
+# ==============================
+.venv/
+venv/
+env/
 
-/notebooks
-/__pycache__
+# ==============================
+# 🔥 Python Cache / Compiled Files
+# ==============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# ==============================
+# 🔥 Jupyter Notebooks
+# ==============================
+.notebooks/
+notebooks/
+
+# ==============================
+# 🔥 Data Files (large datasets)
+# ==============================
 data/
+*.csv
+
+# ==============================
+# 🔥 Models (IMPORTANT CONTROL)
+# Ignore everything in models except required files
+# ==============================
+models/*
+!models/model.pkl
+!models/scaler.pkl
+!models/feature_columns.json
+
+# ==============================
+# 🔥 Logs & Temp Files
+# ==============================
+*.log
+*.tmp
+*.temp
+
+# ==============================
+# 🔥 Environment Variables
+# ==============================
+.env
+
+# ==============================
+# 🔥 OS Files
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
+# 🔥 VS Code / IDE
+# ==============================
+.vscode/
+.idea/
+
+# ==============================
+# 🔥 Build / Distribution
+# ==============================
+dist/
+build/
+
+# ==============================
+# 🔥 Misc
+# ==============================
+*.sqlite3

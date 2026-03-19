@@ -1,76 +1,91 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>AI Cyber Threat Detector</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Cyber Threat Detection</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    input {
+      padding: 12px;
+      margin: 10px;
+      width: 280px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 12px 25px;
+      background: #22c55e;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #16a34a;
+      transform: scale(1.05);
+    }
+
+    #result {
+      margin-top: 25px;
+      font-size: 22px;
+    }
+  </style>
 </head>
-<body class="bg-dark text-light">
 
-<div class="container py-5" style="max-width:600px;">
-  <h2 class="text-center mb-4">AI Cyber Threat Detector</h2>
+<body>
 
-  <div class="card shadow-lg border-0">
-    <div class="card-body bg-light text-dark">
+  <h1>🚀 Cyber Threat Detection</h1>
 
-      <div class="mb-3">
-        <label class="form-label">Destination Port</label>
-        <input id="port" class="form-control" type="number" value="80">
-      </div>
+  <input id="port" placeholder="Destination Port (e.g. 80)" /><br>
+  <input id="duration" placeholder="Flow Duration" /><br>
+  <input id="fwd" placeholder="Total Fwd Packets" /><br>
+  <input id="bwd" placeholder="Total Backward Packets" /><br>
 
-      <div class="mb-3">
-        <label class="form-label">Flow Duration</label>
-        <input id="duration" class="form-control" type="number" value="1000">
-      </div>
+  <br>
 
-      <div class="mb-3">
-        <label class="form-label">Total Fwd Packets</label>
-        <input id="pkts" class="form-control" type="number" value="2">
-      </div>
+  <button onclick="predict()">Detect Threat</button>
 
-      <button id="btn" onclick="predict()" class="btn btn-primary w-100">Predict</button>
+  <div id="result"></div>
 
-      <div id="result" class="alert mt-4 d-none"></div>
+  <script>
+    async function predict() {
+      const data = {
+        "Destination Port": Number(document.getElementById("port").value) || 0,
+        "Flow Duration": Number(document.getElementById("duration").value) || 0,
+        "Total Fwd Packets": Number(document.getElementById("fwd").value) || 0,
+        "Total Backward Packets": Number(document.getElementById("bwd").value) || 0
+      };
 
-    </div>
-  </div>
-</div>
+      const res = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
 
-<script>
-async function predict(){
-  const btn = document.getElementById("btn");
-  btn.innerHTML = "Predicting...";
-  btn.disabled = true;
+      const result = await res.json();
 
-  const payload = {
-    "Destination Port": parseInt(document.getElementById("port").value),
-    "Flow Duration": parseInt(document.getElementById("duration").value),
-    "Total Fwd Packets": parseInt(document.getElementById("pkts").value)
-  };
-
-  const res = await fetch("https://ai-cyber-threat-detector-65us.onrender.com/predict", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(payload)
-  });
-
-  const data = await res.json();
-  let r = data[0];
-  let box = document.getElementById("result");
-
-  box.classList.remove("d-none");
-
-  if(r.prediction === "BENIGN"){
-    box.className = "alert alert-success mt-4";
-  } else {
-    box.className = "alert alert-danger mt-4";
-  }
-
-  box.innerHTML = `<b>${r.prediction}</b> - Confidence: ${Math.round(r.confidence*100)}%`;
-
-  btn.innerHTML = "Predict";
-  btn.disabled = false;
-}
-</script>
+      document.getElementById("result").innerHTML =
+        `<span style="color:${result[0].prediction === 'BENIGN' ? 'lightgreen' : 'red'}">
+    Prediction: ${result[0].prediction}
+  </span><br>
+  Confidence: ${result[0].confidence}`;
+    }
+  </script>
 
 </body>
+
 </html>

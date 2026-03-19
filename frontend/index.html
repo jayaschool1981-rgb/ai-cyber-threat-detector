@@ -68,7 +68,7 @@
         "Total Backward Packets": Number(document.getElementById("bwd").value) || 0
       };
 
-      const res = await fetch("http://127.0.0.1:5000/predict", {
+      const res = await fetch("https://ai-cyber-threat-detector-1-s8ax.onrender.com/predict", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

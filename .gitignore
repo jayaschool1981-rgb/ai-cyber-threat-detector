@@ -13,27 +13,31 @@ __pycache__/
 *.pyo
 *.pyd
 *.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+xmlcov/
+nosetests.xml
+coverage.xml
 
 # ==============================
 # 🔥 Jupyter Notebooks
 # ==============================
-.notebooks/
-notebooks/
+.ipynb_checkpoints/
 
 # ==============================
 # 🔥 Data Files (large datasets)
 # ==============================
 data/
 *.csv
+*.pcap
 
 # ==============================
-# 🔥 Models (IMPORTANT CONTROL)
-# Ignore everything in models except required files
+# 🔥 Models & Artifacts
 # ==============================
-models/*
-!models/model.pkl
-!models/scaler.pkl
-!models/feature_columns.json
+models/*.pkl
+models/*.onnx
+models/*.json
 
 # ==============================
 # 🔥 Logs & Temp Files
@@ -46,6 +50,10 @@ models/*
 # 🔥 Environment Variables
 # ==============================
 .env
+.env.local
+.env.development
+.env.production
+.env.staging
 
 # ==============================
 # 🔥 OS Files
@@ -64,8 +72,10 @@ Thumbs.db
 # ==============================
 dist/
 build/
+*.egg-info/
 
 # ==============================
-# 🔥 Misc
+# 🔥 Databases
 # ==============================
 *.sqlite3
+*.db

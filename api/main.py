@@ -61,6 +61,15 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "An internal server error occurred."}
     )
 
+# Root Welcome Endpoint
+@app.get("/")
+def read_root():
+    return {
+        "message": "Welcome to the AI-Powered Cyber Threat Detection API.",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 # Healthcheck Router
 @app.get("/health", status_code=status.HTTP_200_OK)
 def health():

@@ -40,10 +40,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS middleware
+# Configure CORS middleware with dynamic domain whitelist matching
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict to trusted domains in production settings
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|.*\.vercel\.app|.*\.onrender\.com)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

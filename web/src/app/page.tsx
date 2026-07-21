@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+import { getApiBaseUrl } from '@/lib/api';
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface Alert {
   id: number;
@@ -178,15 +180,45 @@ export default function Dashboard() {
     setSimResult(null);
   };
 
+  // Phase 4 Toast & Copy state
+  const [toastMsg, setToastMsg] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [validationError, setValidationError] = useState('');
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setToastMsg('Copied to clipboard!');
+    setTimeout(() => {
+      setCopied(false);
+      setToastMsg('');
+    }, 2500);
+  };
+
   const runPrediction = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSimLoading(true);
-    setSimResult(null);
+    setValidationError('');
     setErrorMsg('');
 
+    // Pre-submit Input Validation
+    const portNum = Number(port);
+    if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+      setValidationError('Destination Port must be a valid integer between 1 and 65535.');
+      return;
+    }
+
+    const durationNum = Number(duration);
+    if (isNaN(durationNum) || durationNum < 0) {
+      setValidationError('Flow Duration must be a non-negative number.');
+      return;
+    }
+
+    setSimLoading(true);
+    setSimResult(null);
+
     const record = {
-      'Destination Port': Number(port) || 0,
-      'Flow Duration': Number(duration) || 0,
+      'Destination Port': portNum,
+      'Flow Duration': durationNum,
       'Total Fwd Packets': Number(fwdPackets) || 0,
       'Total Backward Packets': Number(bwdPackets) || 0
     };
@@ -196,20 +228,40 @@ export default function Dashboard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(record)
       });
       const data = await res.json();
-      if (res.status === 200 && Array.isArray(data)) {
-        setSimResult(data[0]);
-        // Refresh alert list and stats
-        fetchAlertData(token);
+      if (res.status === 200) {
+        const resultObj = Array.isArray(data) ? data[0] : (data.data || data);
+        setSimResult(resultObj);
+        if (token) fetchAlertData(token);
       } else {
         setErrorMsg(data.detail || 'Inference call failed.');
       }
     } catch (err) {
-      setErrorMsg('Prediction server error.');
+      // Fallback prediction call to Express backend endpoint
+      try {
+        const fallbackRes = await fetch('http://localhost:5000/api/v1/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            destinationPort: portNum,
+            flowDuration: durationNum,
+            totalFwdPackets: Number(fwdPackets) || 0,
+            totalBwdPackets: Number(bwdPackets) || 0
+          })
+        });
+        const fallbackData = await fallbackRes.json();
+        if (fallbackRes.ok && fallbackData.data) {
+          setSimResult(fallbackData.data);
+        } else {
+          setErrorMsg('Prediction service returned an error.');
+        }
+      } catch {
+        setErrorMsg('Prediction server error. Ensure local backend is running.');
+      }
     } finally {
       setSimLoading(false);
     }
@@ -438,55 +490,76 @@ export default function Dashboard() {
               Input connection flow parameters to execute real-time threat detection.
             </p>
             
+            {validationError && (
+              <div className={styles.alertBanner}>
+                <span>⚠️ {validationError}</span>
+              </div>
+            )}
+
+            {toastMsg && (
+              <div className={styles.toast}>
+                ✓ {toastMsg}
+              </div>
+            )}
+
             <div className={styles.simulatorGrid}>
               <form onSubmit={runPrediction} className={styles.formGrid}>
                 <div>
-                  <label className={styles.formLabel}>Destination Port</label>
+                  <label className={styles.formLabel}>Destination Port (1 - 65535)</label>
                   <input
                     type="number"
                     required
+                    min="1"
+                    max="65535"
                     value={port}
                     onChange={(e) => setPort(e.target.value)}
                     className={styles.formInput}
                     placeholder="e.g. 80"
                     style={{ width: '100%' }}
                   />
+                  <div className={styles.charCounter}>{port.length} chars</div>
                 </div>
                 <div>
                   <label className={styles.formLabel}>Flow Duration (ms)</label>
                   <input
                     type="number"
                     required
+                    min="0"
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     className={styles.formInput}
                     placeholder="e.g. 12000"
                     style={{ width: '100%' }}
                   />
+                  <div className={styles.charCounter}>{duration.length} chars</div>
                 </div>
                 <div>
                   <label className={styles.formLabel}>Total Forward Packets</label>
                   <input
                     type="number"
                     required
+                    min="0"
                     value={fwdPackets}
                     onChange={(e) => setFwdPackets(e.target.value)}
                     className={styles.formInput}
                     placeholder="e.g. 2"
                     style={{ width: '100%' }}
                   />
+                  <div className={styles.charCounter}>{fwdPackets.length} chars</div>
                 </div>
                 <div>
                   <label className={styles.formLabel}>Total Backward Packets</label>
                   <input
                     type="number"
                     required
+                    min="0"
                     value={bwdPackets}
                     onChange={(e) => setBwdPackets(e.target.value)}
                     className={styles.formInput}
                     placeholder="e.g. 3"
                     style={{ width: '100%' }}
                   />
+                  <div className={styles.charCounter}>{bwdPackets.length} chars</div>
                 </div>
                 
                 <div style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
@@ -498,20 +571,46 @@ export default function Dashboard() {
 
               <div className={styles.simResultBox}>
                 {simResult ? (
-                  <>
-                    <span className={styles.resultTitle}>Detection Class Outcome</span>
-                    <div className={`${styles.resultBadge} ${simResult.prediction.toUpperCase() === 'BENIGN' ? styles.badgeBenign : styles.badgeMalicious}`}>
-                      {simResult.prediction}
+                  <div className={styles.saasCard}>
+                    <div className={styles.saasCardHeader}>
+                      <span className={styles.resultTitle}>Enterprise Threat Intelligence</span>
+                      <button 
+                        onClick={() => copyToClipboard(JSON.stringify(simResult, null, 2))}
+                        className={styles.copyBtn}
+                      >
+                        {copied ? '✓ Copied!' : '📋 Copy JSON'}
+                      </button>
                     </div>
-                    {simResult.confidence !== null && (
-                      <span className={styles.resultConfidence}>
-                        Model Confidence: **{(simResult.confidence * 100).toFixed(2)}%**
-                      </span>
-                    )}
-                  </>
+
+                    <div className={`${styles.resultBadge} ${String(simResult.prediction || '').toUpperCase() === 'BENIGN' ? styles.badgeBenign : styles.badgeMalicious}`}>
+                      CLASSIFICATION: {simResult.prediction}
+                    </div>
+
+                    <div style={{ fontSize: '0.85rem', color: '#d1d5db', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {simResult.confidence !== undefined && (
+                        <div><strong>Confidence:</strong> {typeof simResult.confidence === 'number' && simResult.confidence <= 1 ? (simResult.confidence * 100).toFixed(2) : simResult.confidence}%</div>
+                      )}
+                      {(simResult as any).riskLevel && (
+                        <div><strong>Risk Level:</strong> <span style={{ color: (simResult as any).riskLevel === 'CRITICAL' || (simResult as any).riskLevel === 'HIGH' ? '#f87171' : '#34d399' }}>{(simResult as any).riskLevel}</span></div>
+                      )}
+                      {(simResult as any).threatVector && (
+                        <div><strong>Threat Vector:</strong> {(simResult as any).threatVector}</div>
+                      )}
+                      {(simResult as any).recommendedAction && (
+                        <div><strong>Recommended Action:</strong> {(simResult as any).recommendedAction}</div>
+                      )}
+                      {(simResult as any).providerUsed && (
+                        <div><strong>Engine Tier:</strong> <span style={{ color: '#60a5fa' }}>{(simResult as any).providerUsed}</span></div>
+                      )}
+                    </div>
+
+                    <div className={styles.charCounter}>
+                      Payload: {JSON.stringify(simResult).length} characters
+                    </div>
+                  </div>
                 ) : (
                   <span className={styles.noResultText}>
-                    {simLoading ? 'Querying ONNX execution context...' : 'Enter flow logs and trigger simulator scan.'}
+                    {simLoading ? 'Querying AI provider circuit...' : 'Enter flow logs and trigger simulator scan.'}
                   </span>
                 )}
               </div>
